@@ -1,0 +1,1257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sale Pulse</title>
+<style>
+  .sp-root, .sp-root * { box-sizing: border-box; }
+  .sp-root {
+    --surface-page:   #f9f9f7;
+    --surface-card:   #fcfcfb;
+    --ink-primary:    #0b0b0b;
+    --ink-secondary:  #52514e;
+    --ink-muted:      #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --accent-traffic: #2a78d6;
+    --accent-gmv:     #1baf7a;
+    --accent-aov:     #eb6834;
+    --accent-conv:    #4a3aa7;
+    --cat-1: #2a78d6; --cat-2: #eb6834; --cat-3: #1baf7a; --cat-4: #eda100;
+    --cat-5: #e87ba4; --cat-6: #008300; --cat-7: #4a3aa7; --cat-8: #e34948;
+    --good:           #0ca30c;
+    --warning:        #fab219;
+    --serious:        #ec835a;
+    --critical:       #d03b3b;
+    --shadow: 0 1px 2px rgba(11,11,11,0.04), 0 4px 16px rgba(11,11,11,0.04);
+    color-scheme: light;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--surface-page);
+    color: var(--ink-primary);
+    min-height: 100%;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .sp-root {
+      --surface-page:   #0d0d0d;
+      --surface-card:   #1a1a19;
+      --ink-primary:    #ffffff;
+      --ink-secondary:  #c3c2b7;
+      --ink-muted:      #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --accent-traffic: #3987e5;
+      --accent-gmv:     #199e70;
+      --accent-aov:     #d95926;
+      --accent-conv:    #9085e9;
+      --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500;
+      --cat-5: #d55181; --cat-6: #008300; --cat-7: #9085e9; --cat-8: #e66767;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] .sp-root {
+    --surface-page:   #0d0d0d;
+    --surface-card:   #1a1a19;
+    --ink-primary:    #ffffff;
+    --ink-secondary:  #c3c2b7;
+    --ink-muted:      #898781;
+    --grid:           #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --accent-traffic: #3987e5;
+    --accent-gmv:     #199e70;
+    --accent-aov:     #d95926;
+    --accent-conv:    #9085e9;
+    --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500;
+    --cat-5: #d55181; --cat-6: #008300; --cat-7: #9085e9; --cat-8: #e66767;
+    color-scheme: dark;
+  }
+
+  .sp-root { padding: 20px 24px 64px; }
+  .sp-shell { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+  /* ---------- header ---------- */
+  .sp-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .sp-brand { display: flex; align-items: center; gap: 10px; }
+  .sp-brand-dot { width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-traffic), var(--accent-gmv)); flex: none; }
+  .sp-brand h1 { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .sp-brand p { margin: 1px 0 0; font-size: 12.5px; color: var(--ink-muted); }
+
+  .sp-status { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+  .sp-live-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--ink-secondary); background: var(--surface-card); border: 1px solid var(--border); padding: 6px 10px 6px 8px; border-radius: 999px; box-shadow: var(--shadow); }
+  .sp-live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); animation: sp-pulse 2s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .sp-live-dot { animation: none; } }
+  @keyframes sp-pulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(12,163,12,0.35); } 50% { opacity: .75; box-shadow: 0 0 0 4px rgba(12,163,12,0); } }
+  .sp-sync-meta { font-size: 12px; color: var(--ink-muted); text-align: right; line-height: 1.35; }
+  .sp-sync-meta b { color: var(--ink-secondary); font-variant-numeric: tabular-nums; }
+
+  .sp-icon-btn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface-card); color: var(--ink-secondary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow); }
+  .sp-icon-btn:hover { color: var(--ink-primary); border-color: var(--ink-muted); }
+  .sp-icon-btn:focus-visible, .sp-tab:focus-visible, .sp-icon-link:focus-visible, .sp-btn:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent-traffic); outline-offset: 2px; }
+
+  /* ---------- sale strip ---------- */
+
+  /* ---------- tabs ---------- */
+  .sp-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); }
+  .sp-tab { appearance: none; background: none; border: none; padding: 10px 4px; margin-right: 22px; font-size: 14px; font-weight: 600; color: var(--ink-muted); cursor: pointer; border-bottom: 2px solid transparent; translate: 0 1px; }
+  .sp-tab:hover { color: var(--ink-secondary); }
+  .sp-tab[aria-selected="true"] { color: var(--ink-primary); border-bottom-color: var(--accent-traffic); }
+  .sp-panel { display: none; flex-direction: column; gap: 18px; }
+  .sp-panel.active { display: flex; }
+
+  /* ---------- stat tiles ---------- */
+  .sp-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 860px) { .sp-tiles { grid-template-columns: repeat(2, 1fr); } }
+  .sp-tile { background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; transition: background-color .5s ease; }
+  .sp-tile.flash { background-color: color-mix(in srgb, var(--accent-traffic) 10%, var(--surface-card)); }
+  .sp-tile-label { font-size: 12px; color: var(--ink-muted); font-weight: 600; }
+  .sp-tile-value { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: proportional-nums; }
+  .sp-tile-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+  .sp-tile-delta { font-size: 12.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px; }
+  .sp-tile-delta.up { color: var(--good); }
+  .sp-tile-delta.down { color: var(--critical); }
+  .sp-tile-delta.flat { color: var(--ink-muted); }
+  .sp-tile svg.spark { display: block; }
+
+  /* ---------- pacing meter ---------- */
+  .sp-card { background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .sp-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .sp-card-title { font-size: 14px; font-weight: 700; }
+  .sp-card-sub { font-size: 12px; color: var(--ink-muted); }
+  .sp-meter-track { height: 14px; border-radius: 7px; background: color-mix(in srgb, var(--accent-traffic) 12%, var(--surface-card)); overflow: hidden; position: relative; border: 1px solid var(--border); }
+  .sp-meter-fill { height: 100%; border-radius: 7px 0 0 7px; }
+  .sp-meter-target { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink-primary); opacity: .55; }
+  .sp-meter-legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-muted); margin-top: 6px; }
+  .sp-status-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+  .sp-status-chip.good { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+  .sp-status-chip.warning { color: #8a6100; background: color-mix(in srgb, var(--warning) 25%, transparent); }
+  .sp-status-chip.critical { color: var(--critical); background: color-mix(in srgb, var(--critical) 14%, transparent); }
+
+  /* ---------- charts ---------- */
+  .sp-chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 780px) { .sp-chart-grid { grid-template-columns: 1fr; } }
+  .sp-chart-wrap { position: relative; }
+  .sp-legend-swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+  .sp-axis-label { fill: var(--ink-muted); font-size: 10.5px; font-family: system-ui, sans-serif; }
+  .sp-anomaly-label { font-size: 10px; font-weight: 700; font-family: system-ui, sans-serif; }
+  .sp-bar { cursor: pointer; }
+  .sp-marker-dot { cursor: pointer; }
+  .sp-rank-row { cursor: default; }
+  .sp-bar-future { fill: none; stroke: var(--baseline); stroke-width: 1.2; stroke-dasharray: 3 3; }
+  .sp-gridline { stroke: var(--grid); stroke-width: 1; }
+  .sp-baseline { stroke: var(--baseline); stroke-width: 1; }
+
+  .sp-tooltip { position: absolute; pointer-events: none; background: var(--ink-primary); color: var(--surface-card); font-size: 11.5px; padding: 6px 9px; border-radius: 7px; line-height: 1.4; box-shadow: 0 6px 20px rgba(0,0,0,.18); opacity: 0; transform: translate(-50%,-100%); transition: opacity .1s ease; white-space: nowrap; z-index: 5; }
+  .sp-tooltip.show { opacity: 1; }
+  .sp-tooltip b { font-variant-numeric: tabular-nums; }
+
+  /* ---------- table ---------- */
+  .sp-table-scroll { overflow-x: auto; }
+  table.sp-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px; }
+  table.sp-table th { text-align: right; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-muted); font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table.sp-table th:first-child, table.sp-table td:first-child { text-align: left; }
+  table.sp-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  table.sp-table tr.today td { background: color-mix(in srgb, var(--accent-traffic) 7%, transparent); font-weight: 600; }
+  table.sp-table tr.future td { color: var(--ink-muted); }
+  table.sp-table tbody tr:hover td { background: color-mix(in srgb, var(--ink-primary) 4%, transparent); }
+
+  /* ---------- milestone tab ---------- */
+  .sp-ms-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 780px) { .sp-ms-summary { grid-template-columns: 1fr; } }
+  .sp-ms-row { display: flex; align-items: center; gap: 6px; }
+
+  /* ---------- shared date bar ---------- */
+  .sp-date-bar { display: flex; align-items: center; gap: 10px; background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; box-shadow: var(--shadow); flex-wrap: wrap; }
+  .sp-date-bar label { font-size: 13px; font-weight: 600; color: var(--ink-secondary); }
+  .sp-date-note { font-size: 12px; color: var(--ink-muted); margin-left: auto; }
+  select.sp-select, input.sp-input { font: inherit; font-size: 13px; background: var(--surface-card); color: var(--ink-primary); border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; }
+  .sp-milestone-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 46px; padding: 3px 8px; border-radius: 999px; font-weight: 700; font-size: 12.5px; background: color-mix(in srgb, var(--accent-gmv) 15%, transparent); color: var(--accent-gmv); }
+  tr.just-hit td { animation: sp-row-flash 2.4s ease; }
+  @keyframes sp-row-flash { 0% { background: color-mix(in srgb, var(--good) 22%, transparent); } 100% { background: transparent; } }
+  @media (prefers-reduced-motion: reduce) { tr.just-hit td { animation: none; } }
+
+  .sp-empty { text-align: center; padding: 48px 20px; color: var(--ink-muted); }
+  .sp-empty-figure { font-size: 34px; font-weight: 700; color: var(--ink-primary); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- ranked category list ---------- */
+  .sp-rank-list { display: flex; flex-direction: column; gap: 8px; }
+  .sp-rank-row { display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 10px; padding: 3px 0; border-radius: 6px; }
+  .sp-rank-label { font-size: 12.5px; font-weight: 600; color: var(--ink-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sp-rank-track { height: 10px; border-radius: 5px; background: var(--grid); overflow: hidden; }
+  .sp-rank-fill { height: 100%; border-radius: 5px; min-width: 2px; }
+  .sp-rank-value { font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--ink-secondary); min-width: 74px; text-align: right; white-space: nowrap; }
+
+  /* ---------- category identity ---------- */
+  .sp-cat-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+  .sp-cat-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  select.sp-select { margin-left: 4px; }
+
+  /* ---------- settings modal ---------- */
+  .sp-modal-overlay { position: fixed; inset: 0; background: rgba(11,11,11,.42); display: none; align-items: flex-start; justify-content: center; padding: 8vh 16px; z-index: 50; }
+  .sp-modal-overlay.open { display: flex; }
+  .sp-modal { background: var(--surface-card); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 420px; padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.25); color: var(--ink-primary); font-family: system-ui, sans-serif; }
+  .sp-modal h2 { font-size: 16px; margin: 0 0 4px; }
+  .sp-modal p.sp-modal-sub { margin: 0 0 16px; font-size: 12.5px; color: var(--ink-muted); }
+  .sp-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .sp-field label { font-size: 12.5px; font-weight: 600; color: var(--ink-secondary); }
+  .sp-field input { width: 100%; padding: 8px 10px; }
+  .sp-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .sp-btn { font: inherit; font-size: 13px; font-weight: 600; border-radius: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--border); background: var(--surface-page); color: var(--ink-primary); }
+  .sp-btn.primary { background: var(--accent-traffic); border-color: var(--accent-traffic); color: #fff; }
+  .sp-btn:hover { filter: brightness(0.97); }
+</style>
+</head>
+<body>
+
+<div class="sp-root">
+  <div class="sp-shell">
+
+    <header class="sp-header">
+      <div class="sp-brand">
+        <span class="sp-brand-dot" aria-hidden="true"></span>
+        <div>
+          <h1>Sale Pulse</h1>
+          <p>Live traffic &amp; GMV tracker for the upcoming sale</p>
+        </div>
+      </div>
+      <div class="sp-status">
+        <div class="sp-sync-meta">
+          <div><span class="sp-live-pill"><span class="sp-live-dot" aria-hidden="true"></span>Live</span></div>
+          <div id="sp-sync-text">Data as of &mdash;</div>
+        </div>
+        <button class="sp-icon-btn" id="sp-settings-btn" title="Sale settings" aria-haspopup="dialog">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sp-date-bar">
+      <label for="global-date-input">Viewing date</label>
+      <input type="date" class="sp-input" id="global-date-input" />
+      <span class="sp-card-sub" id="sp-date-context"></span>
+      <span class="sp-date-note">Applies to Overview &amp; Milestone customers</span>
+    </div>
+
+    <nav class="sp-tabs" role="tablist" aria-label="Dashboard sections">
+      <button class="sp-tab" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button class="sp-tab" role="tab" data-tab="categories" aria-selected="false">Categories</button>
+      <button class="sp-tab" role="tab" data-tab="trend" aria-selected="false">Daily trend</button>
+      <button class="sp-tab" role="tab" data-tab="milestones" aria-selected="false">Milestone customers</button>
+    </nav>
+
+    <section class="sp-panel active" data-panel="overview" id="panel-overview"></section>
+    <section class="sp-panel" data-panel="categories" id="panel-categories"></section>
+    <section class="sp-panel" data-panel="trend" id="panel-trend"></section>
+    <section class="sp-panel" data-panel="milestones" id="panel-milestones"></section>
+
+  </div>
+
+  <div class="sp-modal-overlay" id="sp-modal-overlay">
+    <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="sp-modal-title">
+      <h2 id="sp-modal-title">Sale settings</h2>
+      <p class="sp-modal-sub">Controls the tracking window and pacing targets. Saved to this browser.</p>
+      <div class="sp-field">
+        <label for="cfg-start">Sale start date</label>
+        <input type="date" id="cfg-start" />
+      </div>
+      <div class="sp-field">
+        <label for="cfg-days">Sale length (days)</label>
+        <input type="number" id="cfg-days" min="1" max="30" step="1" />
+      </div>
+      <div class="sp-field">
+        <label for="cfg-traffic">Daily traffic target (sessions)</label>
+        <input type="number" id="cfg-traffic" min="1000" step="5000" />
+      </div>
+      <div class="sp-field">
+        <label for="cfg-gmv">Daily GMV target (₹)</label>
+        <input type="number" id="cfg-gmv" min="100000" step="100000" />
+      </div>
+      <div class="sp-modal-actions">
+        <button class="sp-btn" id="sp-modal-cancel">Cancel</button>
+        <button class="sp-btn primary" id="sp-modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sp-tooltip" id="sp-tooltip"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ===================== config ===================== */
+  var CFG_KEY = "salepulse.config.v3";
+  var BUCKETS_PER_DAY = 48;
+  var BASE_CONV_RATE = 0.035;
+  var MILESTONE_INTERVAL = 100;
+  var HOURLY_WEIGHTS = [0.20,0.15,0.12,0.10,0.12,0.18,0.30,0.45,0.60,0.70,0.75,0.80,0.85,0.85,0.80,0.82,0.90,1.00,1.15,1.30,1.25,1.00,0.70,0.40];
+  var WEIGHT_SUM = HOURLY_WEIGHTS.reduce(function(a,b){return a+b;},0);
+
+  // share/convMult/aov only drive the SIMULATED fallback path (dates outside the real
+  // data window pulled from Databricks) -- calibrated loosely off real 30-day order mix.
+  var CATEGORIES = [
+    { key: "flights",     label: "Flights",     share: 0.42, convMult: 0.90, aov: 16000, color: "var(--cat-1)" },
+    { key: "stays",       label: "Stays",       share: 0.12, convMult: 1.00, aov: 13500, color: "var(--cat-2)" },
+    { key: "trains",      label: "Trains",      share: 0.23, convMult: 1.60, aov: 2000,  color: "var(--cat-3)" },
+    { key: "bus",         label: "Bus",         share: 0.14, convMult: 1.70, aov: 1700,  color: "var(--cat-4)" },
+    { key: "shop",        label: "Shop",        share: 0.07, convMult: 1.30, aov: 3300,  color: "var(--cat-5)" },
+    { key: "experience",  label: "Experience",  share: 0.01, convMult: 1.10, aov: 14500, color: "var(--cat-7)" },
+    { key: "visa",        label: "Visa",        share: 0.01, convMult: 0.35, aov: 4000,  color: "var(--cat-8)" }
+  ];
+  function catByKey(key) {
+    for (var i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i].key === key) return CATEGORIES[i];
+    return null;
+  }
+
+  function todayStr() { return fmtDateKey(new Date()); }
+  function fmtDateKey(d) {
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function addDays(dateKey, n) {
+    var p = dateKey.split("-").map(Number);
+    var d = new Date(p[0], p[1]-1, p[2]);
+    d.setDate(d.getDate() + n);
+    return fmtDateKey(d);
+  }
+  function dayDiff(a, b) {
+    var pa = a.split("-").map(Number), pb = b.split("-").map(Number);
+    var da = new Date(pa[0], pa[1]-1, pa[2]), db = new Date(pb[0], pb[1]-1, pb[2]);
+    return Math.round((db - da) / 86400000);
+  }
+  function loadConfig() {
+    var raw = null;
+    try { raw = localStorage.getItem(CFG_KEY); } catch (e) {}
+    var cfg = raw ? JSON.parse(raw) : null;
+    if (!cfg) {
+      cfg = { saleStart: todayStr(), saleDays: 7, dailyTrafficTarget: 150000, dailyGmvTarget: 50000000 };
+    }
+    return cfg;
+  }
+  function saveConfig(cfg) {
+    try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch (e) {}
+  }
+  var config = loadConfig();
+  var viewDate = null; // shared by Overview + Milestones tabs, driven by the single date picker
+  var realData = null; // fetched from data/latest.json -- real orders/GMV/milestones from Databricks
+
+  /* ===================== deterministic sim engine ===================== */
+  function hashSeed(str) {
+    var h = 1779033703 ^ str.length;
+    for (var i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function saleDayIndex(dateKey) { return dayDiff(config.saleStart, dateKey); }
+  function isWithinSale(dateKey) { var i = saleDayIndex(dateKey); return i >= 0 && i < config.saleDays; }
+  function saleEndKey() { return addDays(config.saleStart, config.saleDays - 1); }
+  function saleState() {
+    var t = todayStr();
+    if (dayDiff(t, config.saleStart) > 0) return "upcoming";
+    if (dayDiff(saleEndKey(), t) > 0) return "ended";
+    return "active";
+  }
+
+  // Fully simulated day (traffic + orders + GMV + milestones), used as a fallback
+  // for any date outside the real Databricks data window. If dateKey === today,
+  // only buckets that have fully elapsed (batch synced) are populated.
+  var dayCache = {};
+  function simulateFullDay(dateKey) {
+    var isToday = dateKey === todayStr();
+    var now = new Date();
+    var completeBuckets = BUCKETS_PER_DAY;
+    if (isToday) {
+      var mins = now.getHours() * 60 + now.getMinutes();
+      completeBuckets = Math.floor(mins / 30);
+    } else if (dayDiff(dateKey, todayStr()) < 0) {
+      completeBuckets = 0; // future day relative to "today" shouldn't happen here, guarded by caller
+    }
+    var cacheKey = dateKey + "|" + completeBuckets + "|" + config.dailyTrafficTarget;
+    if (dayCache[cacheKey]) return dayCache[cacheKey];
+
+    var traffic = 0, orders = 0, gmv = 0;
+    var buckets = [];
+    var runningOrderCount = 0;
+    var cumulativeGmvGlobal = 0;
+    var milestones = [];
+    var categoryTotals = {};
+    CATEGORIES.forEach(function (c) { categoryTotals[c.key] = { traffic: 0, orders: 0, gmv: 0 }; });
+
+    for (var b = 0; b < BUCKETS_PER_DAY; b++) {
+      if (b >= completeBuckets) { buckets.push(null); continue; }
+      var hour = Math.floor(b / 2);
+      var weight = HOURLY_WEIGHTS[hour] / WEIGHT_SUM;
+      var hourlyTrafficTotal = config.dailyTrafficTarget * weight;
+      var bucketStartMin = b * 30;
+      var bucketOrdersAll = [];
+      var bucketTrafficTotal = 0;
+
+      for (var ci = 0; ci < CATEGORIES.length; ci++) {
+        var cat = CATEGORIES[ci];
+        var rng = mulberry32(hashSeed(dateKey + "|" + b + "|" + cat.key));
+        var catHourlyTraffic = hourlyTrafficTotal * cat.share;
+        var catBucketTraffic = Math.max(0, Math.round((catHourlyTraffic / 2) * (0.85 + rng() * 0.3)));
+        var catConvRate = BASE_CONV_RATE * cat.convMult * (0.88 + rng() * 0.24);
+        var catOrders = Math.round(catBucketTraffic * catConvRate);
+        categoryTotals[cat.key].traffic += catBucketTraffic;
+        bucketTrafficTotal += catBucketTraffic;
+
+        for (var o = 0; o < catOrders; o++) {
+          var val = +(cat.aov * (0.55 + rng() * 1.55)).toFixed(2);
+          var offsetMin = rng() * 30;
+          bucketOrdersAll.push({ category: cat.key, value: val, offsetMin: offsetMin });
+          categoryTotals[cat.key].orders++;
+          categoryTotals[cat.key].gmv += val;
+        }
+      }
+
+      bucketOrdersAll.sort(function (a, b2) { return a.offsetMin - b2.offsetMin; });
+      var bucketOrdersCount = 0, bucketGmvCount = 0;
+      for (var oi = 0; oi < bucketOrdersAll.length; oi++) {
+        var ord = bucketOrdersAll[oi];
+        runningOrderCount++;
+        cumulativeGmvGlobal += ord.value;
+        bucketOrdersCount++; bucketGmvCount += ord.value;
+        if (runningOrderCount % MILESTONE_INTERVAL === 0) {
+          var absMin = bucketStartMin + ord.offsetMin;
+          var hh = Math.floor(absMin / 60), mm = Math.floor(absMin % 60);
+          var userSeed = hashSeed(dateKey + "|" + b + "|" + runningOrderCount + "|user");
+          var userId = "CX" + (100000 + (userSeed % 900000));
+          milestones.push({
+            n: runningOrderCount, bucket: b,
+            time: String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0"),
+            category: ord.category, userId: userId, value: ord.value,
+            cumulativeGmv: cumulativeGmvGlobal
+          });
+        }
+      }
+
+      traffic += bucketTrafficTotal; orders += bucketOrdersCount; gmv += bucketGmvCount;
+      buckets.push({ b: b, traffic: bucketTrafficTotal, orders: bucketOrdersCount, gmv: bucketGmvCount });
+    }
+
+    CATEGORIES.forEach(function (c) {
+      var ct = categoryTotals[c.key];
+      ct.convRate = ct.traffic ? ct.orders / ct.traffic : 0;
+      ct.aov = ct.orders ? ct.gmv / ct.orders : 0;
+    });
+
+    var result = {
+      dateKey: dateKey, traffic: traffic, orders: orders, gmv: gmv,
+      convRate: traffic ? orders / traffic : 0,
+      aov: orders ? gmv / orders : 0,
+      buckets: buckets, completeBuckets: completeBuckets,
+      milestones: milestones, categories: categoryTotals
+    };
+    dayCache = {}; dayCache[cacheKey] = result;
+    return result;
+  }
+
+  // Traffic (sessions) has no real source yet -- always simulated, even on days that
+  // have real orders/GMV from Databricks. Kept deterministic per date+bucket+category.
+  function simulateTrafficForDay(dateKey) {
+    var isToday = dateKey === todayStr();
+    var completeBuckets = BUCKETS_PER_DAY;
+    if (isToday) {
+      var now = new Date();
+      completeBuckets = Math.floor((now.getHours() * 60 + now.getMinutes()) / 30);
+    } else if (dayDiff(dateKey, todayStr()) < 0) {
+      completeBuckets = 0;
+    }
+    var categoryTraffic = {};
+    CATEGORIES.forEach(function (c) { categoryTraffic[c.key] = 0; });
+    var bucketTraffic = [];
+    for (var b = 0; b < BUCKETS_PER_DAY; b++) {
+      if (b >= completeBuckets) { bucketTraffic.push(null); continue; }
+      var hour = Math.floor(b / 2);
+      var weight = HOURLY_WEIGHTS[hour] / WEIGHT_SUM;
+      var hourlyTrafficTotal = config.dailyTrafficTarget * weight;
+      var bucketTotal = 0;
+      CATEGORIES.forEach(function (cat) {
+        var rng = mulberry32(hashSeed(dateKey + "|" + b + "|" + cat.key + "|traffic"));
+        var catHourlyTraffic = hourlyTrafficTotal * cat.share;
+        var catBucketTraffic = Math.max(0, Math.round((catHourlyTraffic / 2) * (0.85 + rng() * 0.3)));
+        categoryTraffic[cat.key] += catBucketTraffic;
+        bucketTotal += catBucketTraffic;
+      });
+      bucketTraffic.push(bucketTotal);
+    }
+    return { categoryTraffic: categoryTraffic, bucketTraffic: bucketTraffic, completeBuckets: completeBuckets };
+  }
+
+  // Merges a real Databricks day (real orders/GMV/categories/milestones) with simulated traffic.
+  function buildFromReal(dateKey, real, traffic) {
+    var categories = {};
+    var totalTraffic = 0;
+    CATEGORIES.forEach(function (c) {
+      var r = real.categories[c.key] || { orders: 0, gmv: 0, aov: 0 };
+      var t = traffic.categoryTraffic[c.key] || 0;
+      totalTraffic += t;
+      categories[c.key] = { traffic: t, orders: r.orders, gmv: r.gmv, aov: r.aov, convRate: t ? r.orders / t : 0 };
+    });
+    var buckets = [];
+    var completeBuckets = 0;
+    for (var i = 0; i < BUCKETS_PER_DAY; i++) {
+      var rb = real.buckets[i];
+      var tb = traffic.bucketTraffic[i];
+      if (rb === null && tb === null) { buckets.push(null); continue; }
+      completeBuckets = i + 1;
+      buckets.push({ b: i, traffic: tb || 0, orders: rb ? rb.orders : 0, gmv: rb ? rb.gmv : 0 });
+    }
+    return {
+      dateKey: dateKey, traffic: totalTraffic, orders: real.orders, gmv: real.gmv,
+      convRate: totalTraffic ? real.orders / totalTraffic : 0,
+      aov: real.orders ? real.gmv / real.orders : 0,
+      buckets: buckets, completeBuckets: completeBuckets,
+      milestones: real.milestones, categories: categories, isReal: true
+    };
+  }
+
+  // Public entry point: real data where available (from Databricks via data/latest.json),
+  // fully simulated fallback everywhere else (future dates, or outside the synced window).
+  function computeDay(dateKey) {
+    var real = realData && realData.days ? realData.days[dateKey] : null;
+    if (real) {
+      return buildFromReal(dateKey, real, simulateTrafficForDay(dateKey));
+    }
+    return simulateFullDay(dateKey);
+  }
+
+  /* ===================== formatting (India: rupees, lakh/crore) ===================== */
+  function fmtCompact(n, isMoney) {
+    var sign = n < 0 ? "-" : "";
+    n = Math.abs(n);
+    var out;
+    if (n >= 1e7) out = (n / 1e7).toFixed(n >= 1e8 ? 0 : 1) + "Cr";
+    else if (n >= 1e5) out = (n / 1e5).toFixed(n >= 1e6 ? 0 : 1) + "L";
+    else if (n >= 1e3) out = (n / 1e3).toFixed(n >= 1e4 ? 0 : 1) + "K";
+    else out = Math.round(n).toString();
+    return sign + (isMoney ? "₹" : "") + out;
+  }
+  function fmtNum(n) { return Math.round(n).toLocaleString("en-IN"); }
+  function fmtMoney(n) { return "₹" + Math.round(n).toLocaleString("en-IN", { maximumFractionDigits: 0 }); }
+  function fmtMoney2(n) { return "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtPct(n) { return (n * 100).toFixed(2) + "%"; }
+  function catPill(catKey) {
+    var c = catByKey(catKey);
+    if (!c) return catKey;
+    return "<span class='sp-cat-pill'><span class='sp-cat-dot' style='background:" + c.color + "'></span>" + c.label + "</span>";
+  }
+
+  /* ===================== tooltip ===================== */
+  var tooltipEl = document.getElementById("sp-tooltip");
+  var rootEl = document.querySelector(".sp-root");
+  function showTooltip(evt, html) {
+    tooltipEl.innerHTML = html;
+    var rootRect = rootEl.getBoundingClientRect();
+    tooltipEl.style.left = (evt.clientX - rootRect.left) + "px";
+    tooltipEl.style.top = (evt.clientY - rootRect.top - 10) + "px";
+    tooltipEl.classList.add("show");
+  }
+  function hideTooltip() { tooltipEl.classList.remove("show"); }
+
+  /* ===================== chart primitives (hand-rolled SVG) ===================== */
+  function makeSparkline(values, color) {
+    var w = 96, h = 30, pad = 3;
+    if (!values.length) return "<svg class='spark' width='" + w + "' height='" + h + "'></svg>";
+    var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+    if (min === max) { min -= 1; max += 1; }
+    var stepX = (w - pad * 2) / Math.max(1, values.length - 1);
+    var pts = values.map(function (v, i) {
+      var x = pad + i * stepX;
+      var y = h - pad - ((v - min) / (max - min)) * (h - pad * 2);
+      return [x, y];
+    });
+    var linePath = pts.map(function (p, i) { return (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ");
+    var areaPath = linePath + " L" + pts[pts.length - 1][0].toFixed(1) + "," + (h - pad) + " L" + pts[0][0].toFixed(1) + "," + (h - pad) + " Z";
+    var last = pts[pts.length - 1];
+    return "<svg class='spark' width='" + w + "' height='" + h + "' viewBox='0 0 " + w + " " + h + "' aria-hidden='true'>" +
+      "<path d='" + areaPath + "' fill='" + color + "' opacity='0.12'></path>" +
+      "<path d='" + linePath + "' fill='none' stroke='" + color + "' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'></path>" +
+      "<circle cx='" + last[0].toFixed(1) + "' cy='" + last[1].toFixed(1) + "' r='2.6' fill='" + color + "'></circle>" +
+      "</svg>";
+  }
+
+  // Bar chart: one value per category. Future categories rendered as dashed placeholders.
+  function renderBarChart(container, items, opts) {
+    var w = container.clientWidth || 520, h = opts.height || 160;
+    var padL = 44, padR = 10, padT = 10, padB = 22;
+    var innerW = w - padL - padR, innerH = h - padT - padB;
+    var vals = items.map(function (it) { return it.value || 0; });
+    var maxV = Math.max.apply(null, vals.concat([opts.targetLine || 0])) * 1.15 || 1;
+    var n = items.length;
+    var slotW = innerW / n;
+    var barW = Math.min(24, slotW * 0.55);
+
+    function yFor(v) { return padT + innerH - (v / maxV) * innerH; }
+
+    var gridLines = "";
+    var ticks = 4;
+    for (var g = 0; g <= ticks; g++) {
+      var gv = (maxV / ticks) * g;
+      var gy = yFor(gv);
+      gridLines += "<line class='sp-gridline' x1='" + padL + "' x2='" + (w - padR) + "' y1='" + gy.toFixed(1) + "' y2='" + gy.toFixed(1) + "'></line>";
+      gridLines += "<text class='sp-axis-label' x='" + (padL - 8) + "' y='" + (gy + 3).toFixed(1) + "' text-anchor='end'>" + opts.formatAxis(gv) + "</text>";
+    }
+
+    var bars = "", labels = "";
+    items.forEach(function (it, i) {
+      var cx = padL + slotW * i + slotW / 2;
+      labels += "<text class='sp-axis-label' x='" + cx.toFixed(1) + "' y='" + (h - 6) + "' text-anchor='middle'>" + it.label + "</text>";
+      if (it.future) {
+        var by = yFor(0);
+        bars += "<rect class='sp-bar-future' x='" + (cx - barW / 2).toFixed(1) + "' y='" + (by - 3) + "' width='" + barW + "' height='3' rx='1.5'></rect>";
+        return;
+      }
+      var y = yFor(it.value);
+      var bh = padT + innerH - y;
+      bars += "<rect class='sp-bar' data-i='" + i + "' x='" + (cx - barW / 2).toFixed(1) + "' y='" + y.toFixed(1) + "' width='" + barW + "' height='" + Math.max(bh, 1.5).toFixed(1) + "' rx='4' fill='" + (it.color || opts.color) + "'></rect>";
+    });
+
+    var targetLine = "";
+    if (opts.targetLine) {
+      var ty = yFor(opts.targetLine);
+      targetLine = "<line x1='" + padL + "' x2='" + (w - padR) + "' y1='" + ty.toFixed(1) + "' y2='" + ty.toFixed(1) + "' stroke='var(--ink-primary)' stroke-width='1.3' stroke-dasharray='4 3' opacity='0.55'></line>";
+    }
+
+    var baseline = "<line class='sp-baseline' x1='" + padL + "' x2='" + (w - padR) + "' y1='" + yFor(0).toFixed(1) + "' y2='" + yFor(0).toFixed(1) + "'></line>";
+
+    container.innerHTML = "<svg width='100%' height='" + h + "' viewBox='0 0 " + w + " " + h + "' role='img' aria-label='" + opts.ariaLabel + "'>" +
+      gridLines + targetLine + bars + baseline + labels + "</svg>";
+
+    container.querySelectorAll(".sp-bar").forEach(function (rect) {
+      var it = items[+rect.getAttribute("data-i")];
+      rect.addEventListener("mousemove", function (e) { showTooltip(e, opts.tooltip(it)); });
+      rect.addEventListener("mouseleave", hideTooltip);
+    });
+  }
+
+  // Area/line chart across time-of-day buckets (nullable trailing buckets = not-yet-synced).
+  function renderAreaChart(container, buckets, opts) {
+    var w = container.clientWidth || 520, h = opts.height || 130;
+    var padL = 44, padR = 10, padT = 10, padB = 20;
+    var innerW = w - padL - padR, innerH = h - padT - padB;
+    var n = buckets.length;
+    var stepX = innerW / (n - 1);
+    var known = buckets.filter(function (b) { return b !== null; });
+    var maxV = Math.max.apply(null, known.map(function (b) { return opts.value(b); }).concat([1])) * 1.2;
+
+    function xFor(i) { return padL + i * stepX; }
+    function yFor(v) { return padT + innerH - (v / maxV) * innerH; }
+
+    var gridLines = "";
+    for (var g = 0; g <= 3; g++) {
+      var gv = (maxV / 3) * g, gy = yFor(gv);
+      gridLines += "<line class='sp-gridline' x1='" + padL + "' x2='" + (w - padR) + "' y1='" + gy.toFixed(1) + "' y2='" + gy.toFixed(1) + "'></line>";
+      gridLines += "<text class='sp-axis-label' x='" + (padL - 8) + "' y='" + (gy + 3).toFixed(1) + "' text-anchor='end'>" + opts.formatAxis(gv) + "</text>";
+    }
+    var hourTicks = "";
+    [0, 12, 24, 36, 47].forEach(function (i) {
+      var hh = Math.floor(i / 2);
+      hourTicks += "<text class='sp-axis-label' x='" + xFor(i).toFixed(1) + "' y='" + (h - 4) + "' text-anchor='middle'>" + String(hh).padStart(2, "0") + ":00</text>";
+    });
+
+    var pts = [];
+    buckets.forEach(function (b, i) { if (b !== null) pts.push([xFor(i), yFor(opts.value(b)), i]); });
+
+    var linePath = "", areaPath = "";
+    if (pts.length) {
+      linePath = pts.map(function (p, i) { return (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ");
+      areaPath = linePath + " L" + pts[pts.length - 1][0].toFixed(1) + "," + (padT + innerH) + " L" + pts[0][0].toFixed(1) + "," + (padT + innerH) + " Z";
+    }
+
+    var futureLine = "";
+    var lastKnownIdx = pts.length ? pts[pts.length - 1][2] : -1;
+    if (lastKnownIdx >= 0 && lastKnownIdx < n - 1) {
+      var fx1 = xFor(lastKnownIdx), fx2 = xFor(n - 1), fy = yFor(0);
+      futureLine = "<line x1='" + fx1.toFixed(1) + "' x2='" + fx2.toFixed(1) + "' y1='" + fy.toFixed(1) + "' y2='" + fy.toFixed(1) + "' stroke='var(--baseline)' stroke-width='1.2' stroke-dasharray='3 3'></line>";
+    }
+
+    var endDot = "";
+    if (pts.length) {
+      var lastPt = pts[pts.length - 1];
+      endDot = "<circle cx='" + lastPt[0].toFixed(1) + "' cy='" + lastPt[1].toFixed(1) + "' r='4' fill='" + opts.color + "' stroke='var(--surface-card)' stroke-width='2'></circle>";
+    }
+
+    var hitAreas = pts.map(function (p) {
+      return "<rect class='sp-hit' data-i='" + p[2] + "' x='" + (p[0] - stepX / 2).toFixed(1) + "' y='" + padT + "' width='" + stepX.toFixed(1) + "' height='" + innerH + "' fill='transparent'></rect>";
+    }).join("");
+
+    var baseline = "<line class='sp-baseline' x1='" + padL + "' x2='" + (w - padR) + "' y1='" + yFor(0).toFixed(1) + "' y2='" + yFor(0).toFixed(1) + "'></line>";
+
+    // Bands (e.g. downtrend runs) sit behind the area fill so the trend line stays legible.
+    var bandRects = "", bandLabels = "";
+    if (opts.bands && opts.bands.length) {
+      opts.bands.forEach(function (bd) {
+        var bx1 = xFor(bd.startIndex) - stepX / 2, bx2 = xFor(bd.endIndex) + stepX / 2;
+        var bandColor = bd.color || "var(--critical)";
+        bandRects += "<rect class='sp-band' x='" + bx1.toFixed(1) + "' y='" + padT + "' width='" + (bx2 - bx1).toFixed(1) + "' height='" + innerH + "' fill='" + bandColor + "' opacity='0.10'></rect>";
+        if (bd.label) {
+          bandLabels += "<text class='sp-anomaly-label' x='" + ((bx1 + bx2) / 2).toFixed(1) + "' y='" + (padT + 11) + "' text-anchor='middle' fill='" + bandColor + "'>" + bd.label + "</text>";
+        }
+      });
+    }
+
+    var markerDots = "", markerLabels = "";
+    if (opts.markers && opts.markers.length) {
+      opts.markers.forEach(function (mk, i) {
+        var mx = xFor(mk.bucketIndex), my = yFor(mk.value);
+        var mkColor = mk.color || "var(--good)";
+        markerDots += "<circle class='sp-marker-dot' data-mi='" + i + "' cx='" + mx.toFixed(1) + "' cy='" + my.toFixed(1) + "' r='5' fill='" + mkColor + "' stroke='var(--surface-card)' stroke-width='2'></circle>";
+        if (mk.label) {
+          markerLabels += "<text class='sp-anomaly-label' x='" + mx.toFixed(1) + "' y='" + (my - 9).toFixed(1) + "' text-anchor='middle' fill='" + mkColor + "'>" + mk.label + "</text>";
+        }
+      });
+    }
+
+    container.innerHTML = "<svg width='100%' height='" + h + "' viewBox='0 0 " + w + " " + h + "' role='img' aria-label='" + opts.ariaLabel + "'>" +
+      gridLines + bandRects +
+      "<path d='" + areaPath + "' fill='" + opts.color + "' opacity='0.10'></path>" +
+      "<path d='" + linePath + "' fill='none' stroke='" + opts.color + "' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'></path>" +
+      futureLine + baseline + endDot + hourTicks + hitAreas + markerDots + markerLabels + bandLabels +
+      "</svg>";
+
+    container.querySelectorAll(".sp-hit").forEach(function (rect) {
+      var b = buckets[+rect.getAttribute("data-i")];
+      rect.addEventListener("mousemove", function (e) { showTooltip(e, opts.tooltip(b)); });
+      rect.addEventListener("mouseleave", hideTooltip);
+    });
+    if (opts.markers && opts.markers.length) {
+      container.querySelectorAll(".sp-marker-dot").forEach(function (dot) {
+        var mk = opts.markers[+dot.getAttribute("data-mi")];
+        dot.addEventListener("mousemove", function (e) { showTooltip(e, mk.tooltip); });
+        dot.addEventListener("mouseleave", hideTooltip);
+      });
+    }
+  }
+
+  // Horizontal ranked list — used for category breakdowns (labeled, so identity never relies on hue alone).
+  function renderRankedList(container, items, opts) {
+    var sorted = items.slice().sort(function (a, b) { return b.value - a.value; });
+    var max = Math.max.apply(null, sorted.map(function (it) { return it.value; }).concat([1]));
+    var html = sorted.map(function (it, i) {
+      var pct = max ? Math.max(2, (it.value / max) * 100) : 0;
+      return "<div class='sp-rank-row' data-i='" + i + "'>" +
+        "<div class='sp-rank-label'>" + it.label + "</div>" +
+        "<div class='sp-rank-track'><div class='sp-rank-fill' style='width:" + pct.toFixed(1) + "%;background:" + it.color + "'></div></div>" +
+        "<div class='sp-rank-value'>" + opts.formatValue(it.value) + "</div>" +
+        "</div>";
+    }).join("");
+    container.innerHTML = "<div class='sp-rank-list' role='img' aria-label='" + opts.ariaLabel + "'>" + html + "</div>";
+    container.querySelectorAll(".sp-rank-row").forEach(function (row) {
+      var it = sorted[+row.getAttribute("data-i")];
+      row.addEventListener("mousemove", function (e) { showTooltip(e, opts.tooltip(it)); });
+      row.addEventListener("mouseleave", hideTooltip);
+    });
+  }
+
+  /* ===================== render: sync meta ===================== */
+  function nextSyncCountdown() {
+    var now = new Date();
+    var mins = now.getMinutes();
+    var secsIntoBucket = (mins % 30) * 60 + now.getSeconds();
+    var secsLeft = 30 * 60 - secsIntoBucket;
+    var mm = Math.floor(secsLeft / 60), ss = secsLeft % 60;
+    return String(mm).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+  }
+  function lastSyncLabel() {
+    var now = new Date();
+    var flooredMin = Math.floor(now.getMinutes() / 30) * 30;
+    var d = new Date(now); d.setMinutes(flooredMin, 0, 0);
+    return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+  }
+  function renderSyncMeta() {
+    var text;
+    if (realData && realData.generatedAt) {
+      var gen = new Date(realData.generatedAt);
+      var next = new Date(gen.getTime() + 30 * 60000);
+      var secsLeft = Math.max(0, Math.round((next - new Date()) / 1000));
+      var mm = Math.floor(secsLeft / 60), ss = secsLeft % 60;
+      text = "Data as of <b>" + gen.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) +
+        "</b> &middot; next sync in <b id='sp-countdown'>" + String(mm).padStart(2, "0") + ":" + String(ss).padStart(2, "0") + "</b>" +
+        (secsLeft === 0 ? " &middot; running late" : "") + " &middot; traffic simulated";
+    } else {
+      text = "Data as of <b>" + lastSyncLabel() + "</b> &middot; next sync in <b id='sp-countdown'>" + nextSyncCountdown() + "</b> &middot; fully simulated";
+    }
+    document.getElementById("sp-sync-text").innerHTML = text;
+  }
+  function refreshSyncCountdown() {
+    var cd = document.getElementById("sp-countdown");
+    if (!cd) return;
+    if (realData && realData.generatedAt) {
+      var gen = new Date(realData.generatedAt);
+      var next = new Date(gen.getTime() + 30 * 60000);
+      var secsLeft = Math.max(0, Math.round((next - new Date()) / 1000));
+      var mm = Math.floor(secsLeft / 60), ss = secsLeft % 60;
+      cd.textContent = String(mm).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+    } else {
+      cd.textContent = nextSyncCountdown();
+    }
+  }
+
+  // Real data lives in a private repo (real GMV + customer user_id); this public
+  // page pulls it through a Cloudflare Worker proxy rather than fetching a
+  // committed file, so nothing sensitive is ever stored in this public repo.
+  var DATA_PROXY_URL = "https://sale-pulse-data-proxy.YOUR_SUBDOMAIN.workers.dev";
+  var DATA_PROXY_KEY = "REPLACE_WITH_SHARED_SECRET";
+
+  function loadRealData() {
+    return fetch(DATA_PROXY_URL + "?key=" + encodeURIComponent(DATA_PROXY_KEY) + "&t=" + Date.now())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { realData = d; })
+      .catch(function () { /* keep prior realData (or null) on network failure */ });
+  }
+
+  /* ===================== render: overview ===================== */
+  function categoryItemsFor(dayData, field) {
+    return CATEGORIES.map(function (c) {
+      return { key: c.key, label: c.label, value: dayData.categories[c.key][field], color: c.color };
+    });
+  }
+
+  function trailingDayGmvSparkSeries(field, endDate) {
+    var end = endDate || todayStr();
+    var out = [];
+    for (var i = 6; i >= 0; i--) {
+      out.push(computeDay(addDays(end, -i))[field]);
+    }
+    return out;
+  }
+
+  // Flags sudden traffic spikes (vs. a trailing baseline) and sustained downtrend
+  // runs (3+ consecutive declining buckets dropping at least 25% peak-to-trough)
+  // across a day's 30-min buckets, so they can be highlighted on the chart.
+  function detectTrafficSignals(buckets, valueFn) {
+    var known = [];
+    buckets.forEach(function (b, i) { if (b !== null) known.push({ i: i, v: valueFn(b) }); });
+
+    var spikes = [];
+    for (var k = 2; k < known.length; k++) {
+      var histCount = Math.min(4, k);
+      var sum = 0;
+      for (var j = k - histCount; j < k; j++) sum += known[j].v;
+      var baseline = sum / histCount;
+      if (baseline > 5 && known[k].v >= baseline * 1.6) {
+        spikes.push({ bucketIndex: known[k].i, value: known[k].v, baseline: Math.round(baseline) });
+      }
+    }
+
+    var downtrendRanges = [];
+    var runStart = null;
+    for (var k2 = 1; k2 <= known.length; k2++) {
+      var declining = k2 < known.length && known[k2].v < known[k2 - 1].v * 0.98;
+      if (declining) {
+        if (runStart === null) runStart = k2 - 1;
+      } else if (runStart !== null) {
+        var s = runStart, e = k2 - 1;
+        if (e - s >= 2) {
+          var first = known[s].v, last = known[e].v;
+          if (first > 5 && last <= first * 0.75) {
+            downtrendRanges.push({ startIndex: known[s].i, endIndex: known[e].i, from: first, to: last });
+          }
+        }
+        runStart = null;
+      }
+    }
+    return { spikes: spikes, downtrendRanges: downtrendRanges };
+  }
+
+  function deltaHTML(curr, prev, higherIsBetter) {
+    if (prev === 0 || prev === undefined) return "<span class='sp-tile-delta flat'>&mdash;</span>";
+    var pct = ((curr - prev) / prev) * 100;
+    var up = pct >= 0;
+    var good = higherIsBetter ? up : !up;
+    var cls = Math.abs(pct) < 0.5 ? "flat" : (good ? "up" : "down");
+    var arrow = Math.abs(pct) < 0.5 ? "" : (up ? "&#9650; " : "&#9660; ");
+    return "<span class='sp-tile-delta " + cls + "'>" + arrow + Math.abs(pct).toFixed(1) + "% vs previous day</span>";
+  }
+
+  function renderOverview() {
+    var panel = document.getElementById("panel-overview");
+    var t = todayStr();
+    var isToday = viewDate === t;
+    var dayLabel = isToday ? "Today" : "This day";
+
+    var today = computeDay(viewDate);
+    var yesterday = computeDay(addDays(viewDate, -1));
+
+    var tiles = [
+      { label: dayLabel + "’s traffic", value: fmtCompact(today.traffic), delta: deltaHTML(today.traffic, yesterday.traffic, true), spark: trailingDayGmvSparkSeries("traffic", viewDate), color: "var(--accent-traffic)" },
+      { label: dayLabel + "’s GMV", value: fmtCompact(today.gmv, true), delta: deltaHTML(today.gmv, yesterday.gmv, true), spark: trailingDayGmvSparkSeries("gmv", viewDate), color: "var(--accent-gmv)" },
+      { label: "Conversion rate", value: fmtPct(today.convRate), delta: deltaHTML(today.convRate, yesterday.convRate, true), spark: trailingDayGmvSparkSeries("convRate", viewDate), color: "var(--accent-conv)" },
+      { label: "AOV", value: fmtMoney(today.aov), delta: deltaHTML(today.aov, yesterday.aov, true), spark: trailingDayGmvSparkSeries("aov", viewDate), color: "var(--accent-aov)" }
+    ];
+
+    var tilesHTML = tiles.map(function (tile) {
+      return "<div class='sp-tile' data-tile>" +
+        "<div class='sp-tile-label'>" + tile.label + "</div>" +
+        "<div class='sp-tile-row'><div class='sp-tile-value'>" + tile.value + "</div>" + makeSparkline(tile.spark, tile.color) + "</div>" +
+        tile.delta +
+        "</div>";
+    }).join("");
+
+    var projectedGmv = today.completeBuckets > 0 ? (today.gmv / today.completeBuckets) * BUCKETS_PER_DAY : 0;
+    var pacePct = config.dailyGmvTarget ? Math.min(140, (today.gmv / config.dailyGmvTarget) * 100) : 0;
+    var onPace = projectedGmv >= config.dailyGmvTarget;
+    var statusChip = !isToday
+      ? (today.gmv >= config.dailyGmvTarget ? "<span class='sp-status-chip good'>Target hit</span>" : "<span class='sp-status-chip critical'>Target missed</span>")
+      : (onPace ? "<span class='sp-status-chip good'>On pace</span>" : "<span class='sp-status-chip warning'>Behind pace</span>");
+
+    var pacingCard =
+      "<div class='sp-card'>" +
+      "<div class='sp-card-head'><div><div class='sp-card-title'>GMV pacing " + (isToday ? "(today)" : "(" + viewDate + ")") + "</div>" +
+      "<div class='sp-card-sub'>" + fmtMoney(today.gmv) + " of " + fmtMoney(config.dailyGmvTarget) + " target" + (isToday ? " &middot; projected end-of-day " + fmtMoney(projectedGmv) : "") + "</div></div>" + statusChip + "</div>" +
+      "<div class='sp-meter-track'><div class='sp-meter-fill' style='width:" + Math.min(100, pacePct) + "%; background:" + (pacePct >= 100 ? "var(--good)" : "var(--accent-gmv)") + "'></div>" +
+      "<div class='sp-meter-target' style='left:" + Math.min(100, (config.dailyGmvTarget / Math.max(config.dailyGmvTarget, today.gmv, projectedGmv || 1)) * 100) + "%'></div></div>" +
+      "<div class='sp-meter-legend'><span>₹0</span><span>Target " + fmtMoney(config.dailyGmvTarget) + "</span></div>" +
+      "</div>";
+
+    var intradayCard =
+      "<div class='sp-card'>" +
+      "<div class='sp-card-head'><div class='sp-card-title'>Traffic by time of day</div><div class='sp-card-sub'>30-min buckets &middot; <span style='color:var(--warning)'>&#9650;</span> spike &middot; <span style='color:var(--critical)'>&#9660;</span> downtrend</div></div>" +
+      "<div class='sp-chart-wrap' id='chart-intraday-traffic'></div></div>" +
+      "<div class='sp-card'>" +
+      "<div class='sp-card-head'><div class='sp-card-title'>GMV by time of day</div><div class='sp-card-sub'>30-min buckets</div></div>" +
+      "<div class='sp-chart-wrap' id='chart-intraday-gmv'></div></div>";
+
+    var categoryCard =
+      "<div class='sp-card'><div class='sp-card-head'><div><div class='sp-card-title'>GMV by category " + (isToday ? "(today)" : "(" + viewDate + ")") + "</div><div class='sp-card-sub'>Flights &middot; Stays &middot; Trains &middot; Bus &middot; Shop &middot; Experience &middot; Visa</div></div></div><div id='chart-overview-categories'></div></div>";
+
+    panel.innerHTML =
+      "<div class='sp-tiles'>" + tilesHTML + "</div>" +
+      pacingCard +
+      categoryCard +
+      "<div class='sp-chart-grid'>" + intradayCard + "</div>";
+
+    var trafficSignals = detectTrafficSignals(today.buckets, function (b) { return b.traffic; });
+    renderAreaChart(document.getElementById("chart-intraday-traffic"), today.buckets, {
+      color: "var(--accent-traffic)", ariaLabel: "Traffic by time of day",
+      value: function (b) { return b.traffic; },
+      formatAxis: function (v) { return fmtCompact(v); },
+      tooltip: function (b) { return (b ? Math.floor(b.b/2) : 0) + ":" + (b && b.b % 2 ? "30" : "00") + "<br><b>" + fmtNum(b.traffic) + "</b> visits"; },
+      markers: trafficSignals.spikes.map(function (s) {
+        return {
+          bucketIndex: s.bucketIndex, value: s.value, color: "var(--warning)", label: "▲",
+          tooltip: "<b>Spike</b> &middot; " + fmtNum(s.value) + " visits<br>vs " + fmtNum(s.baseline) + " baseline"
+        };
+      }),
+      bands: trafficSignals.downtrendRanges.map(function (d) {
+        var pct = d.from ? Math.round((1 - d.to / d.from) * 100) : 0;
+        return {
+          startIndex: d.startIndex, endIndex: d.endIndex, color: "var(--critical)",
+          label: "–" + pct + "%"
+        };
+      })
+    });
+    renderAreaChart(document.getElementById("chart-intraday-gmv"), today.buckets, {
+      color: "var(--accent-gmv)", ariaLabel: "GMV by time of day",
+      value: function (b) { return b.gmv; },
+      formatAxis: function (v) { return fmtCompact(v, true); },
+      tooltip: function (b) { return (b ? Math.floor(b.b/2) : 0) + ":" + (b && b.b % 2 ? "30" : "00") + "<br><b>" + fmtMoney(b.gmv) + "</b> GMV"; }
+    });
+    renderRankedList(document.getElementById("chart-overview-categories"), categoryItemsFor(today, "gmv"), {
+      ariaLabel: "GMV by category",
+      formatValue: function (v) { return fmtCompact(v, true); },
+      tooltip: function (it) { return it.label + "<br><b>" + fmtMoney(it.value) + "</b> GMV"; }
+    });
+  }
+
+  /* ===================== render: categories ===================== */
+  function renderCategoriesTab() {
+    var panel = document.getElementById("panel-categories");
+    var state = saleState();
+    var t = todayStr();
+
+    if (state === "upcoming") {
+      panel.innerHTML = "<div class='sp-card sp-empty'><div class='sp-empty-figure'>&mdash;</div>No category data yet &mdash; the sale opens " + config.saleStart + ".</div>";
+      return;
+    }
+
+    var focusDay = state === "ended" ? saleEndKey() : t;
+    var data = computeDay(focusDay);
+    var gmvItems = categoryItemsFor(data, "gmv");
+    var trafficItems = categoryItemsFor(data, "traffic");
+
+    var tableRows = CATEGORIES.map(function (c) {
+      var ct = data.categories[c.key];
+      var share = data.gmv ? (ct.gmv / data.gmv * 100) : 0;
+      return "<tr><td>" + catPill(c.key) + "</td><td>" + fmtNum(ct.traffic) + "</td><td>" + fmtNum(ct.orders) + "</td><td>" + fmtMoney(ct.gmv) + "</td><td>" + fmtPct(ct.convRate) + "</td><td>" + fmtMoney(ct.aov) + "</td><td>" + share.toFixed(1) + "%</td></tr>";
+    }).join("");
+
+    panel.innerHTML =
+      "<div class='sp-chart-grid'>" +
+      "<div class='sp-card'><div class='sp-card-head'><div class='sp-card-title'>GMV by category</div><div class='sp-card-sub'>" + (state === "ended" ? "final day" : "today, so far") + "</div></div><div id='chart-cat-gmv'></div></div>" +
+      "<div class='sp-card'><div class='sp-card-head'><div class='sp-card-title'>Traffic by category</div><div class='sp-card-sub'>" + (state === "ended" ? "final day" : "today, so far") + "</div></div><div id='chart-cat-traffic'></div></div>" +
+      "</div>" +
+      "<div class='sp-card'><div class='sp-card-head'><div class='sp-card-title'>Category breakdown</div><div class='sp-card-sub'>" + (state === "ended" ? "final day" : "today, so far") + "</div></div>" +
+      "<div class='sp-table-scroll'><table class='sp-table'><thead><tr><th>Category</th><th>Traffic</th><th>Orders</th><th>GMV</th><th>Conv. rate</th><th>AOV</th><th>Share of GMV</th></tr></thead><tbody>" + tableRows + "</tbody></table></div></div>";
+
+    renderRankedList(document.getElementById("chart-cat-gmv"), gmvItems, {
+      ariaLabel: "GMV by category",
+      formatValue: function (v) { return fmtCompact(v, true); },
+      tooltip: function (it) { return it.label + "<br><b>" + fmtMoney(it.value) + "</b> GMV"; }
+    });
+    renderRankedList(document.getElementById("chart-cat-traffic"), trafficItems, {
+      ariaLabel: "Traffic by category",
+      formatValue: function (v) { return fmtCompact(v); },
+      tooltip: function (it) { return it.label + "<br><b>" + fmtNum(it.value) + "</b> visits"; }
+    });
+  }
+
+  /* ===================== render: daily trend ===================== */
+  function saleDayList() {
+    var days = [];
+    for (var i = 0; i < config.saleDays; i++) days.push(addDays(config.saleStart, i));
+    return days;
+  }
+  var trendCategory = "all";
+  function renderTrend() {
+    var panel = document.getElementById("panel-trend");
+    var t = todayStr();
+    var days = saleDayList();
+    var rows = days.map(function (dk, i) {
+      var future = dayDiff(dk, t) < 0;
+      var data = future ? null : computeDay(dk);
+      var metrics = future ? null : (trendCategory === "all" ? data : data.categories[trendCategory]);
+      return { dateKey: dk, dayNum: i + 1, future: future, isToday: dk === t, metrics: metrics };
+    });
+
+    var selectedCat = trendCategory === "all" ? null : catByKey(trendCategory);
+    var trafficColor = selectedCat ? selectedCat.color : "var(--accent-traffic)";
+    var gmvColor = selectedCat ? selectedCat.color : "var(--accent-gmv)";
+
+    var trafficItems = rows.map(function (r) { return { label: "D" + r.dayNum, value: r.future ? 0 : r.metrics.traffic, future: r.future, color: r.isToday ? trafficColor : "color-mix(in srgb, " + trafficColor + " 60%, var(--surface-page))" }; });
+    var gmvItems = rows.map(function (r) { return { label: "D" + r.dayNum, value: r.future ? 0 : r.metrics.gmv, future: r.future, color: r.isToday ? gmvColor : "color-mix(in srgb, " + gmvColor + " 60%, var(--surface-page))" }; });
+
+    var tableRows = rows.map(function (r) {
+      if (r.future) {
+        return "<tr class='future'><td>Day " + r.dayNum + " &middot; " + r.dateKey + "</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>";
+      }
+      return "<tr" + (r.isToday ? " class='today'" : "") + "><td>Day " + r.dayNum + " &middot; " + r.dateKey + (r.isToday ? " (today)" : "") + "</td>" +
+        "<td>" + fmtNum(r.metrics.traffic) + "</td><td>" + fmtNum(r.metrics.orders) + "</td><td>" + fmtMoney(r.metrics.gmv) + "</td>" +
+        "<td>" + fmtPct(r.metrics.convRate) + "</td><td>" + fmtMoney(r.metrics.aov) + "</td></tr>";
+    }).join("");
+
+    var catOptions = "<option value='all'" + (trendCategory === "all" ? " selected" : "") + ">All categories</option>" +
+      CATEGORIES.map(function (c) { return "<option value='" + c.key + "'" + (trendCategory === c.key ? " selected" : "") + ">" + c.label + "</option>"; }).join("");
+
+    panel.innerHTML =
+      "<div class='sp-ms-row'><label for='trend-cat-select' style='font-size:13px;color:var(--ink-secondary);font-weight:600;margin-right:2px'>Category</label>" +
+      "<select class='sp-select' id='trend-cat-select'>" + catOptions + "</select></div>" +
+      "<div class='sp-chart-grid'>" +
+      "<div class='sp-card'><div class='sp-card-head'><div class='sp-card-title'>Traffic by day</div><div class='sp-card-sub'><span class='sp-legend-swatch' style='background:" + trafficColor + "'></span>Sessions</div></div><div class='sp-chart-wrap' id='chart-trend-traffic'></div></div>" +
+      "<div class='sp-card'><div class='sp-card-head'><div class='sp-card-title'>GMV by day</div><div class='sp-card-sub'><span class='sp-legend-swatch' style='background:" + gmvColor + "'></span>Gross merchandise value</div></div><div class='sp-chart-wrap' id='chart-trend-gmv'></div></div>" +
+      "</div>" +
+      "<div class='sp-card'><div class='sp-card-head'><div class='sp-card-title'>Daily breakdown</div><div class='sp-card-sub'>" + config.saleDays + "-day sale window" + (selectedCat ? " &middot; " + selectedCat.label : "") + "</div></div>" +
+      "<div class='sp-table-scroll'><table class='sp-table'><thead><tr><th>Day</th><th>Traffic</th><th>Orders</th><th>GMV</th><th>Conv. rate</th><th>AOV</th></tr></thead><tbody>" + tableRows + "</tbody></table></div></div>";
+
+    renderBarChart(document.getElementById("chart-trend-traffic"), trafficItems, {
+      color: trafficColor, ariaLabel: "Traffic by day",
+      formatAxis: function (v) { return fmtCompact(v); },
+      tooltip: function (it) { return it.label + "<br><b>" + fmtNum(it.value) + "</b> visits"; }
+    });
+    renderBarChart(document.getElementById("chart-trend-gmv"), gmvItems, {
+      color: gmvColor, ariaLabel: "GMV by day", targetLine: selectedCat ? 0 : config.dailyGmvTarget,
+      formatAxis: function (v) { return fmtCompact(v, true); },
+      tooltip: function (it) { return it.label + "<br><b>" + fmtMoney(it.value) + "</b> GMV"; }
+    });
+
+    document.getElementById("trend-cat-select").addEventListener("change", function (e) {
+      trendCategory = e.target.value;
+      renderTrend();
+    });
+  }
+
+  /* ===================== render: milestones ===================== */
+  function renderMilestones() {
+    var panel = document.getElementById("panel-milestones");
+    var t = todayStr();
+    var data = computeDay(viewDate);
+    var isToday = viewDate === t;
+
+    var nextMilestoneAt = (Math.floor(data.orders / MILESTONE_INTERVAL) + 1) * MILESTONE_INTERVAL;
+    var ordersToNext = nextMilestoneAt - data.orders;
+
+    var summary =
+      "<div class='sp-card'><div class='sp-card-title'>Orders so far</div><div class='sp-tile-value' style='margin-top:6px'>" + fmtNum(data.orders) + "</div></div>" +
+      "<div class='sp-card'><div class='sp-card-title'>Milestones hit</div><div class='sp-tile-value' style='margin-top:6px'>" + data.milestones.length + "</div><div class='sp-card-sub'>every " + MILESTONE_INTERVAL + "th customer</div></div>" +
+      "<div class='sp-card'><div class='sp-card-title'>" + (isToday && data.completeBuckets < BUCKETS_PER_DAY ? "Next milestone" : "Last milestone") + "</div><div class='sp-tile-value' style='margin-top:6px'>" + (isToday && data.completeBuckets < BUCKETS_PER_DAY ? ("#" + fmtNum(nextMilestoneAt)) : (data.milestones.length ? "#" + fmtNum(data.milestones[data.milestones.length-1].n) : "—")) + "</div><div class='sp-card-sub'>" + (isToday && data.completeBuckets < BUCKETS_PER_DAY ? (ordersToNext + " order" + (ordersToNext === 1 ? "" : "s") + " to go") : "day complete") + "</div></div>";
+
+    var cumulativeBuckets = [];
+    var running = 0;
+    data.buckets.forEach(function (bkt) {
+      if (bkt === null) { cumulativeBuckets.push(null); return; }
+      running += bkt.orders;
+      cumulativeBuckets.push({ b: bkt.b, orders: running });
+    });
+    var markers = data.milestones.map(function (m) {
+      return {
+        bucketIndex: m.bucket, value: m.n,
+        tooltip: "#" + fmtNum(m.n) + " &middot; " + m.time + "<br><b>" + m.userId + "</b> &middot; " + catByKey(m.category).label + "<br>" + fmtMoney2(m.value)
+      };
+    });
+
+    var categoryMixItems = CATEGORIES.map(function (c) {
+      return { key: c.key, label: c.label, value: data.milestones.filter(function (m) { return m.category === c.key; }).length, color: c.color };
+    });
+
+    var rowsHTML = data.milestones.length
+      ? data.milestones.slice().reverse().map(function (m, idx) {
+          var justHit = isToday && idx === 0 && (data.orders - m.n) < 5;
+          return "<tr" + (justHit ? " class='just-hit'" : "") + "><td><span class='sp-milestone-badge'>#" + fmtNum(m.n) + "</span></td><td>" + m.userId + "</td><td>" + catPill(m.category) + "</td><td>" + m.time + "</td><td>" + fmtMoney2(m.value) + "</td><td>" + fmtMoney(m.cumulativeGmv) + "</td></tr>";
+        }).join("")
+      : "";
+
+    var tableOrEmpty = data.milestones.length
+      ? "<div class='sp-table-scroll'><table class='sp-table'><thead><tr><th>Milestone</th><th>Customer ID</th><th>Category</th><th>Time</th><th>Order value</th><th>Cumulative GMV</th></tr></thead><tbody>" + rowsHTML + "</tbody></table></div>"
+      : "<div class='sp-empty'>No milestone customer on " + viewDate + " &mdash; needs " + MILESTONE_INTERVAL + " orders that day.</div>";
+
+    panel.innerHTML =
+      "<div class='sp-ms-summary'>" + summary + "</div>" +
+      "<div class='sp-card'><div class='sp-card-head'><div class='sp-card-title'>Orders through the day</div><div class='sp-card-sub'>cumulative &middot; green dots mark every " + MILESTONE_INTERVAL + "th customer</div></div><div class='sp-chart-wrap' id='chart-ms-timeline'></div></div>" +
+      (data.milestones.length ? "<div class='sp-card'><div class='sp-card-head'><div class='sp-card-title'>Milestones by category</div><div class='sp-card-sub'>which vertical produced this day's " + MILESTONE_INTERVAL + "th-customer moments</div></div><div id='chart-ms-category'></div></div>" : "") +
+      "<div class='sp-card'><div class='sp-card-head'><div class='sp-card-title'>Every " + MILESTONE_INTERVAL + "th customer</div><div class='sp-card-sub'>chronological order sequence, most recent first</div></div>" + tableOrEmpty + "</div>";
+
+    renderAreaChart(document.getElementById("chart-ms-timeline"), cumulativeBuckets, {
+      color: "var(--accent-conv)", ariaLabel: "Cumulative orders through the day",
+      value: function (b) { return b.orders; },
+      formatAxis: function (v) { return fmtCompact(v); },
+      tooltip: function (b) { return (b ? Math.floor(b.b / 2) : 0) + ":" + (b && b.b % 2 ? "30" : "00") + "<br><b>" + fmtNum(b.orders) + "</b> orders so far"; },
+      markers: markers
+    });
+    if (data.milestones.length) {
+      renderRankedList(document.getElementById("chart-ms-category"), categoryMixItems, {
+        ariaLabel: "Milestones by category",
+        formatValue: function (v) { return fmtNum(v); },
+        tooltip: function (it) { return it.label + "<br><b>" + fmtNum(it.value) + "</b> milestone" + (it.value === 1 ? "" : "s"); }
+      });
+    }
+
+  }
+
+  /* ===================== render all ===================== */
+  function renderAll() {
+    renderDateBar();
+    renderSyncMeta();
+    renderOverview();
+    renderCategoriesTab();
+    renderTrend();
+    renderMilestones();
+  }
+
+  /* ===================== shared date control ===================== */
+  function renderDateBar() {
+    var t = todayStr();
+    if (!viewDate || dayDiff(viewDate, t) < 0) viewDate = t;
+    var input = document.getElementById("global-date-input");
+    input.max = t;
+    if (document.activeElement !== input) input.value = viewDate;
+    var context = viewDate === t
+      ? "today"
+      : (isWithinSale(viewDate) ? ("Day " + (saleDayIndex(viewDate) + 1) + " of the sale") : "outside the configured sale window");
+    document.getElementById("sp-date-context").textContent = context;
+  }
+  document.getElementById("global-date-input").addEventListener("change", function (e) {
+    viewDate = e.target.value || todayStr();
+    renderDateBar();
+    renderOverview();
+    renderMilestones();
+  });
+
+  function flashTiles() {
+    document.querySelectorAll(".sp-tile").forEach(function (tile) {
+      tile.classList.add("flash");
+      setTimeout(function () { tile.classList.remove("flash"); }, 900);
+    });
+  }
+
+  /* ===================== tabs ===================== */
+  document.querySelectorAll(".sp-tab").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll(".sp-tab").forEach(function (t) { t.setAttribute("aria-selected", "false"); });
+      document.querySelectorAll(".sp-panel").forEach(function (p) { p.classList.remove("active"); });
+      tab.setAttribute("aria-selected", "true");
+      document.getElementById("panel-" + tab.getAttribute("data-tab")).classList.add("active");
+    });
+  });
+
+  /* ===================== settings modal ===================== */
+  var overlay = document.getElementById("sp-modal-overlay");
+  function openModal() {
+    document.getElementById("cfg-start").value = config.saleStart;
+    document.getElementById("cfg-days").value = config.saleDays;
+    document.getElementById("cfg-traffic").value = config.dailyTrafficTarget;
+    document.getElementById("cfg-gmv").value = config.dailyGmvTarget;
+    overlay.classList.add("open");
+  }
+  function closeModal() { overlay.classList.remove("open"); }
+  document.getElementById("sp-settings-btn").addEventListener("click", openModal);
+  document.getElementById("sp-modal-cancel").addEventListener("click", closeModal);
+  overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
+  document.getElementById("sp-modal-save").addEventListener("click", function () {
+    var start = document.getElementById("cfg-start").value || todayStr();
+    var days = Math.max(1, Math.min(30, parseInt(document.getElementById("cfg-days").value, 10) || 7));
+    var traffic = Math.max(1000, parseInt(document.getElementById("cfg-traffic").value, 10) || 150000);
+    var gmv = Math.max(100000, parseInt(document.getElementById("cfg-gmv").value, 10) || 50000000);
+    config = { saleStart: start, saleDays: days, dailyTrafficTarget: traffic, dailyGmvTarget: gmv };
+    saveConfig(config);
+    closeModal();
+    renderAll();
+  });
+
+  /* ===================== live ticking ===================== */
+  var lastBucketSeen = null;
+  setInterval(function () {
+    refreshSyncCountdown();
+    var now = new Date();
+    var bucketId = todayStr() + "-" + Math.floor((now.getHours() * 60 + now.getMinutes()) / 30);
+    if (lastBucketSeen === null) lastBucketSeen = bucketId;
+    if (bucketId !== lastBucketSeen) {
+      lastBucketSeen = bucketId;
+      renderAll();
+      flashTiles();
+    }
+  }, 1000);
+
+  // The Databricks sync workflow pushes data/latest.json roughly every 30 min;
+  // poll more often client-side so a fresh push shows up without a manual reload.
+  var lastKnownGeneratedAt = null;
+  setInterval(function () {
+    loadRealData().then(function () {
+      var gen = realData && realData.generatedAt;
+      if (gen && gen !== lastKnownGeneratedAt) {
+        lastKnownGeneratedAt = gen;
+        renderAll();
+        flashTiles();
+      }
+    });
+  }, 3 * 60 * 1000);
+
+  window.addEventListener("resize", function () {
+    clearTimeout(window.__spResize);
+    window.__spResize = setTimeout(renderAll, 150);
+  });
+
+  loadRealData().then(function () {
+    lastKnownGeneratedAt = realData && realData.generatedAt;
+    renderAll();
+  });
+})();
+</script>
+</body>
+</html>
